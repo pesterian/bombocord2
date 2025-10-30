@@ -46,6 +46,7 @@ myvenv\Scripts\activate     # On Windows
 ```bash
 pip install -r requirements.txt
 ```
+*For now I would recommend not installing the google genai library since it's uneseccary*
 
 4. **Set up environment variables**
 
