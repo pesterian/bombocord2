@@ -103,3 +103,35 @@ def get_random_entry(filepath: str) -> Optional[tuple[str, str]]:
     
     key = random.choice(list(data.keys()))
     return (key, data[key])
+
+
+def prompt(system_prompt: str, user_input: str, api_key: str) -> str:
+    """
+    Send a prompt to Google Generative AI and return the response.
+    
+    Args:
+        system_prompt: The system prompt (TALK or TRANSLATE from config)
+        user_input: The user's input text
+        api_key: Google API key
+        
+    Returns:
+        AI response text or error message
+    """
+    try:
+        import google.generativeai as genai
+        
+        # Configure the API
+        genai.configure(api_key=api_key)
+        
+        # Create model
+        model = genai.GenerativeModel('gemini-pro')
+        
+        # Combine system prompt with user input
+        full_prompt = f"{system_prompt}\n\n{user_input}" if system_prompt else user_input
+        
+        # Generate response
+        response = model.generate_content(full_prompt)
+        return response.text
+        
+    except Exception as e:
+        return f"❌ AI error: {str(e)}"

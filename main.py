@@ -1,9 +1,9 @@
 import discord
 from discord import app_commands
-from config import DISCORD_TOKEN, COMMAND_PREFIX, JAMAICAN_DICT_FILE, ADMINS_FILE
+from config import DISCORD_TOKEN, COMMAND_PREFIX, JAMAICAN_DICT_FILE, ADMINS_FILE, GOOGLE_API_KEY, TALK, TRANSLATE
 from func import (
     get_dict_entry, get_all_keys, add_dict_entry, 
-    remove_dict_entry, update_dict_entry, is_admin, get_random_entry
+    remove_dict_entry, update_dict_entry, is_admin, get_random_entry, prompt
 )
 
 # Create bot client
@@ -191,6 +191,54 @@ async def roulette(interaction: discord.Interaction):
     await interaction.response.send_message(value)
 
 
+@tree.command(name="talk", description="Chat with the AI")
+@app_commands.describe(message="Your message to the AI")
+async def talk_command(interaction: discord.Interaction, message: str):
+    """Chat with the AI using the TALK prompt."""
+    if not GOOGLE_API_KEY:
+        await interaction.response.send_message("❌ AI nuh setup yet, boss! No API key found.")
+        return
+    
+    await interaction.response.defer(thinking=True)
+    
+    response = prompt(TALK, message, GOOGLE_API_KEY)
+    await interaction.followup.send(response)
+
+
+@tree.command(name="translate", description="Translate a message using AI")
+async def translate_command(interaction: discord.Interaction):
+    """Translate the message you're replying to using AI."""
+    if not GOOGLE_API_KEY:
+        await interaction.response.send_message("❌ AI nuh setup yet, boss! No API key found.", ephemeral=True)
+        return
+    
+    # Check if the command was used as a reply
+    if not interaction.message or not interaction.message.reference:
+        await interaction.response.send_message(
+            "❌ Yuh haffi reply to a message fi translate it, star!",
+            ephemeral=True
+        )
+        return
+    
+    try:
+        # Get the referenced message
+        channel = interaction.channel
+        referenced_message = await channel.fetch_message(interaction.message.reference.message_id)
+        text_to_translate = referenced_message.content
+        
+        if not text_to_translate:
+            await interaction.response.send_message("❌ Dat message empty, boss!", ephemeral=True)
+            return
+        
+        await interaction.response.defer(thinking=True)
+        
+        response = prompt(TRANSLATE, text_to_translate, GOOGLE_API_KEY)
+        await interaction.followup.send(response)
+        
+    except Exception as e:
+        await interaction.followup.send(f"❌ Somet'ing go wrong: {str(e)}")
+
+
 @tree.command(name="help", description="Show all available commands")
 async def help_command(interaction: discord.Interaction):
     """Display help information about all commands."""
@@ -219,6 +267,18 @@ async def help_command(interaction: discord.Interaction):
     embed.add_field(
         name="/roulette",
         value="Get a random ting from di dictionary",
+        inline=False
+    )
+    
+    embed.add_field(
+        name="/talk [message]",
+        value="Chat with di AI bot",
+        inline=False
+    )
+    
+    embed.add_field(
+        name="/translate",
+        value="Translate a message (reply to a message fi use dis)",
         inline=False
     )
     
@@ -253,6 +313,8 @@ async def help_command(interaction: discord.Interaction):
             value="Delete an entry from di dictionary",
             inline=False
         )
+    
+    embed.set_footer(text="Bombocord2 🤖 | Respect yuhself!")
     
     await interaction.response.send_message(embed=embed)
 
