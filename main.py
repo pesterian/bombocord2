@@ -18,8 +18,12 @@ pending_confirmations = {}
 
 @client.event
 async def on_ready():
-    await tree.sync()
-    print(f'Bot is ready! Logged in as {client.user}')
+    try:
+        synced = await tree.sync()
+        print(f'Bot is ready! Logged in as {client.user}')
+        print(f'Synced {len(synced)} command(s)')
+    except Exception as e:
+        print(f'Error syncing commands: {e}')
 
 
 @client.event
@@ -313,8 +317,6 @@ async def help_command(interaction: discord.Interaction):
             value="Delete an entry from di dictionary",
             inline=False
         )
-    
-    embed.set_footer(text="Bombocord2 🤖 | Respect yuhself!")
     
     await interaction.response.send_message(embed=embed)
 
