@@ -87,6 +87,7 @@ JSON format with key-value pairs:
   "key2": "another value"
 }
 ```
+*One very useful tip is to use discord embed URLS to include pictures and videos*
 
 ## Project Structure
 
