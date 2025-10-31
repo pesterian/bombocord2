@@ -17,8 +17,8 @@ the OG bombocord should be considered legacy and will not be updated any further
 
 #### Admin Commands
 - `/add [key] [value]` - Add a new dictionary entry
-- `/remove [key]` - Remove an entry (requires confirmation)
-- `/update [key] [new_value]` - Update an entry's value (requires confirmation)
+- `/remove [key]` - Remove an entry
+- `/update [key] [new_value]` - Update an entry's value
 
 ## Quick Setup
 
