@@ -69,6 +69,7 @@ Edit `admins.json` to add Discord user IDs who should have admin privileges:
 6. **Run the bot**
 ```bash
 python main.py
+python3 main.py #most modern mac and linux distributions use this by default 
 ```
 
 ## Configuration
