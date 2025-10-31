@@ -31,7 +31,7 @@ the OG bombocord should be considered legacy and will not be updated any further
 
 1. **Clone the repository**
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/pesterian/bombocord2
 cd bombocord2
 ```
 
