@@ -1,5 +1,6 @@
 import json
 from typing import Optional
+import requests
 
 
 def load_json(filepath: str) -> dict:
@@ -103,3 +104,44 @@ def get_random_entry(filepath: str) -> Optional[tuple[str, str]]:
     
     key = random.choice(list(data.keys()))
     return (key, data[key])
+
+
+def query_ollama(prompt: str, base_url: str, model: str, system_prompt: str = "") -> tuple[bool, str]:
+    """
+    Query a local Ollama AI model.
+    
+    Args:
+        prompt: The user's prompt/question
+        base_url: The Ollama API base URL (e.g., http://localhost:11434)
+        model: The model name to use (e.g., llama2, mistral, etc.)
+        system_prompt: Optional system prompt to set context
+    
+    Returns:
+        (success, response_text or error_message)
+    """
+    try:
+        url = f"{base_url}/api/generate"
+        
+        payload = {
+            "model": model,
+            "prompt": prompt,
+            "stream": False
+        }
+        
+        if system_prompt:
+            payload["system"] = system_prompt
+        
+        response = requests.post(url, json=payload, timeout=60)
+        response.raise_for_status()
+        
+        result = response.json()
+        return True, result.get("response", "No response received")
+    
+    except requests.exceptions.ConnectionError:
+        return False, "Cannot connect to Ollama. Make sure Ollama is running."
+    except requests.exceptions.Timeout:
+        return False, "Request timed out. The model might be too slow or busy."
+    except requests.exceptions.RequestException as e:
+        return False, f"Error querying Ollama: {str(e)}"
+    except Exception as e:
+        return False, f"Unexpected error: {str(e)}"

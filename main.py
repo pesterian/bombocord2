@@ -1,9 +1,13 @@
 import discord
 from discord import app_commands
-from config import DISCORD_TOKEN, COMMAND_PREFIX, JAMAICAN_DICT_FILE, ADMINS_FILE
+from config import (
+    DISCORD_TOKEN, COMMAND_PREFIX, JAMAICAN_DICT_FILE, ADMINS_FILE,
+    OLLAMA_BASE_URL, OLLAMA_MODEL, TRANSLATE, TALK
+)
 from func import (
     get_dict_entry, get_all_keys, add_dict_entry, 
-    remove_dict_entry, update_dict_entry, is_admin, get_random_entry
+    remove_dict_entry, update_dict_entry, is_admin, get_random_entry,
+    query_ollama
 )
 
 # Create bot client
@@ -223,6 +227,18 @@ async def help_command(interaction: discord.Interaction):
     )
     
     embed.add_field(
+        name="/talk [prompt]",
+        value="Talk to the AI assistant",
+        inline=False
+    )
+    
+    embed.add_field(
+        name="/translate [text]",
+        value="Translate text to Jamaican Patois using AI",
+        inline=False
+    )
+    
+    embed.add_field(
         name="/help",
         value="Show dis message",
         inline=False
@@ -255,6 +271,51 @@ async def help_command(interaction: discord.Interaction):
         )
     
     await interaction.response.send_message(embed=embed)
+
+
+@tree.command(name="talk", description="Talk to the AI assistant")
+@app_commands.describe(prompt="Your message or question for the AI")
+async def talk(interaction: discord.Interaction, prompt: str):
+    """Query the AI assistant with a custom prompt."""
+    await interaction.response.defer(thinking=True)
+    
+    success, response = query_ollama(prompt, OLLAMA_BASE_URL, OLLAMA_MODEL, TALK)
+    
+    if success:
+        # Discord has a 2000 character limit for messages
+        if len(response) > 1900:
+            # Split into chunks if too long
+            chunks = [response[i:i+1900] for i in range(0, len(response), 1900)]
+            await interaction.followup.send(chunks[0])
+            for chunk in chunks[1:]:
+                await interaction.channel.send(chunk)
+        else:
+            await interaction.followup.send(response)
+    else:
+        await interaction.followup.send(f"❌ Error: {response}", ephemeral=True)
+
+
+@tree.command(name="translate", description="Translate text to Jamaican Patois using AI")
+@app_commands.describe(text="The text you want to translate to Jamaican Patois")
+async def translate(interaction: discord.Interaction, text: str):
+    """Translate text to Jamaican Patois using AI."""
+    await interaction.response.defer(thinking=True)
+    
+    full_prompt = f"{TRANSLATE}\n\n{text}"
+    success, response = query_ollama(full_prompt, OLLAMA_BASE_URL, OLLAMA_MODEL)
+    
+    if success:
+        # Discord has a 2000 character limit for messages
+        if len(response) > 1900:
+            # Split into chunks if too long
+            chunks = [response[i:i+1900] for i in range(0, len(response), 1900)]
+            await interaction.followup.send(chunks[0])
+            for chunk in chunks[1:]:
+                await interaction.channel.send(chunk)
+        else:
+            await interaction.followup.send(response)
+    else:
+        await interaction.followup.send(f"❌ Error: {response}", ephemeral=True)
 
 
 # Run the bot
