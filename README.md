@@ -28,7 +28,7 @@ this is the experimental ai branch, you should probably know what youre doing to
 ## Configuration
 
 Edit `config.py` to customize:
-- **API** The port that will be listening for ollama's local API
+- **API**: The port that will be listening for ollama's local API
 - **Rate Limiting**: Adjust `RATE_LIMIT_CALLS` and `RATE_LIMIT_PERIOD`
 - **AI Prompts**: Modify `TALK` and `TRANSLATE` system prompts
 
