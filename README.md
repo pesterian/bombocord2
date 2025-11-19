@@ -5,7 +5,8 @@ the OG bombocord should be considered legacy and will not be updated any further
 
 ## TODO
  - Logging events
- - Translating messages into Jamaican using AI (check "ai" branch)
+
+> **Note:** All AI functionality is maintained exclusively on the `ai` branch. This main branch focuses on core bot features without AI integration.
 
 ## Features
 
@@ -79,7 +80,6 @@ python3 main.py #most modern mac and linux distributions use this by default
 - `COMMAND_PREFIX` - Default prefix for dictionary commands (default: `*`)
 - `JAMAICAN_DICT_FILE` - Path to dictionary JSON file
 - `ADMINS_FILE` - Path to admins JSON file
-- `TRANSLATE` / `TALK` - AI prompt configurations, still not implemented
 
 ### Dictionary File (`jamaican_dict.json`)
 JSON format with key-value pairs:
