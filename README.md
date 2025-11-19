@@ -5,7 +5,7 @@ the OG bombocord should be considered legacy and will not be updated any further
 
 ## TODO
  - Logging events
- - Translation of messages using Google Genai
+ - Translating messages into Jamaican using AI (check "ai" branch)
 
 ## Features
 
@@ -29,7 +29,6 @@ the OG bombocord should be considered legacy and will not be updated any further
 ### Prerequisites
 - Python 3.8+
 - Discord Bot Token ([Create one here](https://discord.com/developers/applications))
-- Google Generative AI API Key (optional, for AI features) [not yet implemented]
 
 ### Installation
 
@@ -50,14 +49,12 @@ myvenv\Scripts\activate     # On Windows
 ```bash
 pip install -r requirements.txt
 ```
-*For now I would recommend not installing the google genai library since it's uneseccary*
 
 4. **Set up environment variables**
 
 Create a `.env` file in the project root:
 ```env
 DISCORD_TOKEN=your_discord_bot_token_here
-GOOGLE_API_KEY=your_google_api_key_here #uneeded for now, functionality to be implemented
 ```
 
 5. **Configure admin users**
