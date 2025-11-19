@@ -337,13 +337,13 @@ async def help_command(interaction: discord.Interaction):
     
     embed.add_field(
         name="/talk [prompt]",
-        value="Talk to the AI assistant",
+        value="Chat wid di AI assistant (talks in Jamaican Patois)\nRate limited to prevent spam",
         inline=False
     )
     
     embed.add_field(
         name="/translate [text]",
-        value="Translate text to Jamaican Patois using AI",
+        value="Translate any text to Jamaican Patois using AI\nRate limited to prevent spam",
         inline=False
     )
     

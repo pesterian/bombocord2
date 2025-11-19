@@ -13,7 +13,7 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 # Ollama Configuration
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama2")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "tinyllama")
 
 # AI Prompts
 TRANSLATE = "Translate the following text to Jamaican Patois. Include ONLY the translated text in your response. Use common Jamaican expressions while keeping most of your words English so it's understandable for English speakers; make sure you avoid overdoing it. Don't make up text of your own, translate the given words only. Example: input: 'hello my name is Paul' Output: 'wagwan mi name Paul'. Here's the text: "
