@@ -141,17 +141,17 @@ async def on_message(message):
                 if confirmation['action'] == 'remove':
                     success, msg = remove_dict_entry(confirmation['key'], JAMAICAN_DICT_FILE)
                     if success:
-                        await message.channel.send(f"✅ Mi delete '{confirmation['key']}' from di book, seen?")
+                        await message.channel.send(f"Mi delete '{confirmation['key']}' from di book, seen?")
                     else:
-                        await message.channel.send(f"❌ Somet'ing go wrong, boss!")
+                        await message.channel.send(f"Somet'ing go wrong, boss!")
                 elif confirmation['action'] == 'update':
                     success, msg = update_dict_entry(confirmation['key'], confirmation['value'], JAMAICAN_DICT_FILE)
                     if success:
-                        await message.channel.send(f"✅ Mi update '{confirmation['key']}' inna di book, seen?")
+                        await message.channel.send(f"Mi update '{confirmation['key']}' inna di book, seen?")
                     else:
-                        await message.channel.send(f"❌ Somet'ing go wrong, boss!")
+                        await message.channel.send(f"Somet'ing go wrong, boss!")
             else:
-                await message.channel.send("❌ Aight, mi cancel dat fi yuh.")
+                await message.channel.send("Aight, mi cancel dat fi yuh.")
             
             del pending_confirmations[message.author.id]
 
@@ -163,7 +163,7 @@ async def list_keys(interaction: discord.Interaction):
     keys = get_all_keys(JAMAICAN_DICT_FILE)
     
     if not keys:
-        await interaction.response.send_message("📝 Di dictionary empty out, boss!")
+        await interaction.response.send_message("Di dictionary empty out, boss!")
         return
     
     # Split into chunks if too long
@@ -171,7 +171,7 @@ async def list_keys(interaction: discord.Interaction):
     chunks = [keys[i:i + chunk_size] for i in range(0, len(keys), chunk_size)]
     
     embed = discord.Embed(
-        title="📚 All Di Keys Dem",
+        title="All Di Keys Dem",
         description=f"Total: {len(keys)} tings inna di book",
         color=discord.Color.blue()
     )
@@ -193,14 +193,14 @@ async def list_keys(interaction: discord.Interaction):
 async def add_entry(interaction: discord.Interaction, key: str, value: str):
     """Add a new entry to the dictionary (admin only)."""
     if not is_admin(interaction.user.id, ADMINS_FILE):
-        await interaction.response.send_message("❌ Yuh nuh have nuh permission fi dis, star!", ephemeral=True)
+        await interaction.response.send_message("Yuh nuh have nuh permission fi dis, star!", ephemeral=True)
         return
     
     success, message = add_dict_entry(key, value, JAMAICAN_DICT_FILE)
     if success:
-        await interaction.response.send_message(f"✅ Mi add '{key}' to di book, seen?")
+        await interaction.response.send_message(f"Mi add '{key}' to di book, seen?")
     else:
-        await interaction.response.send_message(f"❌ Dat key '{key}' already deh yah, boss!")
+        await interaction.response.send_message(f"Dat key '{key}' already deh yah, boss!")
 
 
 @tree.command(name="remove", description="[ADMIN] Remove a dictionary entry")
@@ -209,13 +209,13 @@ async def add_entry(interaction: discord.Interaction, key: str, value: str):
 async def remove_entry(interaction: discord.Interaction, key: str):
     """Remove an entry from the dictionary (admin only)."""
     if not is_admin(interaction.user.id, ADMINS_FILE):
-        await interaction.response.send_message("❌ Yuh nuh have nuh permission fi dis, star!", ephemeral=True)
+        await interaction.response.send_message("Yuh nuh have nuh permission fi dis, star!", ephemeral=True)
         return
     
     # Check if key exists
     value = get_dict_entry(key, JAMAICAN_DICT_FILE)
     if not value:
-        await interaction.response.send_message(f"❌ Mi cyaan find `{key}` inna di book, boss!")
+        await interaction.response.send_message(f"Mi cyaan find `{key}` inna di book, boss!")
         return
     
     # Store confirmation request
@@ -226,7 +226,7 @@ async def remove_entry(interaction: discord.Interaction, key: str):
     }
     
     await interaction.response.send_message(
-        f"⚠️ Yuh sure yuh waan delete `{key}`, breda?\n"
+        f"Yuh sure yuh waan delete `{key}`, breda?\n"
         f"Current ting: {value[:100]}{'...' if len(value) > 100 else ''}\n\n"
         f"Type `yes` fi go through wid it or `no` fi cancel."
     )
@@ -238,13 +238,13 @@ async def remove_entry(interaction: discord.Interaction, key: str):
 async def update_entry(interaction: discord.Interaction, key: str, new_value: str):
     """Update an existing entry in the dictionary (admin only)."""
     if not is_admin(interaction.user.id, ADMINS_FILE):
-        await interaction.response.send_message("❌ Yuh nuh have nuh permission fi dis, star!", ephemeral=True)
+        await interaction.response.send_message("Yuh nuh have nuh permission fi dis, star!", ephemeral=True)
         return
     
     # Check if key exists
     old_value = get_dict_entry(key, JAMAICAN_DICT_FILE)
     if not old_value:
-        await interaction.response.send_message(f"❌ Mi cyaan find `{key}` inna di book, boss!")
+        await interaction.response.send_message(f"Mi cyaan find `{key}` inna di book, boss!")
         return
     
     # Store confirmation request
@@ -255,7 +255,7 @@ async def update_entry(interaction: discord.Interaction, key: str, new_value: st
     }
     
     await interaction.response.send_message(
-        f"⚠️ Yuh sure yuh waan update `{key}`, breda?\n\n"
+        f"Yuh sure yuh waan update `{key}`, breda?\n\n"
         f"**Old ting:** {old_value[:100]}{'...' if len(old_value) > 100 else ''}\n"
         f"**New ting:** {new_value[:100]}{'...' if len(new_value) > 100 else ''}\n\n"
         f"Type `yes` fi go through wid it or `no` fi cancel."
@@ -269,10 +269,21 @@ async def roulette(interaction: discord.Interaction):
     entry = get_random_entry(JAMAICAN_DICT_FILE)
     
     if not entry:
-        await interaction.response.send_message("📝 Di dictionary empty out, boss!")
+        await interaction.response.send_message("Di dictionary empty out, boss!")
         return
     
     key, value = entry
+    
+    # Check if the command was used as a reply
+    if interaction.message and interaction.message.reference:
+        try:
+            replied_message = await interaction.channel.fetch_message(interaction.message.reference.message_id)
+            await interaction.response.send_message("Done")
+            await replied_message.reply(value, mention_author=False)
+            return
+        except:
+            pass
+    
     await interaction.response.send_message(value)
 
 
@@ -283,7 +294,7 @@ async def help_command(interaction: discord.Interaction):
     is_user_admin = is_admin(interaction.user.id, ADMINS_FILE)
     
     embed = discord.Embed(
-        title="🇯🇲 Bombocord Commands",
+        title="Bombocord Commands",
         description="All di commands yuh can use, seen?",
         color=discord.Color.gold()
     )
@@ -329,7 +340,7 @@ async def help_command(interaction: discord.Interaction):
     # Admin commands (only show if user is admin)
     if is_user_admin:
         embed.add_field(
-            name="👑 Admin Commands",
+            name="Admin Commands",
             value="Dese commands only fi di admins, star!",
             inline=False
         )
@@ -365,6 +376,23 @@ async def talk(interaction: discord.Interaction, prompt: str):
     success, response = query_ollama(prompt, OLLAMA_BASE_URL, OLLAMA_MODEL, TALK)
     
     if success:
+        # Check if the command was used as a reply
+        if interaction.message and interaction.message.reference:
+            try:
+                replied_message = await interaction.channel.fetch_message(interaction.message.reference.message_id)
+                await interaction.followup.send("Done")
+                # Discord has a 2000 character limit for messages
+                if len(response) > 1900:
+                    chunks = [response[i:i+1900] for i in range(0, len(response), 1900)]
+                    await replied_message.reply(chunks[0], mention_author=False)
+                    for chunk in chunks[1:]:
+                        await interaction.channel.send(chunk)
+                else:
+                    await replied_message.reply(response, mention_author=False)
+                return
+            except:
+                pass
+        
         # Discord has a 2000 character limit for messages
         if len(response) > 1900:
             # Split into chunks if too long
@@ -375,7 +403,7 @@ async def talk(interaction: discord.Interaction, prompt: str):
         else:
             await interaction.followup.send(response)
     else:
-        await interaction.followup.send(f"❌ Error: {response}", ephemeral=True)
+        await interaction.followup.send(f"Error: {response}", ephemeral=True)
 
 
 @tree.command(name="translate", description="Translate text to Jamaican Patois using AI")
@@ -389,6 +417,23 @@ async def translate(interaction: discord.Interaction, text: str):
     success, response = query_ollama(full_prompt, OLLAMA_BASE_URL, OLLAMA_MODEL)
     
     if success:
+        # Check if the command was used as a reply
+        if interaction.message and interaction.message.reference:
+            try:
+                replied_message = await interaction.channel.fetch_message(interaction.message.reference.message_id)
+                await interaction.followup.send("Done")
+                # Discord has a 2000 character limit for messages
+                if len(response) > 1900:
+                    chunks = [response[i:i+1900] for i in range(0, len(response), 1900)]
+                    await replied_message.reply(chunks[0], mention_author=False)
+                    for chunk in chunks[1:]:
+                        await interaction.channel.send(chunk)
+                else:
+                    await replied_message.reply(response, mention_author=False)
+                return
+            except:
+                pass
+        
         # Discord has a 2000 character limit for messages
         if len(response) > 1900:
             # Split into chunks if too long
@@ -399,7 +444,7 @@ async def translate(interaction: discord.Interaction, text: str):
         else:
             await interaction.followup.send(response)
     else:
-        await interaction.followup.send(f"❌ Error: {response}", ephemeral=True)
+        await interaction.followup.send(f"Error: {response}", ephemeral=True)
 
 
 # Run the bot

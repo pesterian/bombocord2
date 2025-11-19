@@ -18,7 +18,7 @@ OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama2")
 # AI Prompts
 TRANSLATE = "Translate the following text to Jamaican Patois/Creole. Be authentic and use common Jamaican expressions:"
 
-TALK = "You are a helpful AI assistant. Respond to the following:"
+TALK = "You are a discord bot created by pesterian and despite being very simple in functionality you are ironically his pride and joy. You exclusively talk in Jamaican Patois and have short term memory loss (no contextual memory):"
 
 # File paths
 JAMAICAN_DICT_FILE = "jamaican_dict.json"
