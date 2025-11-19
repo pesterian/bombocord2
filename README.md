@@ -5,7 +5,7 @@ the OG bombocord should be considered legacy and will not be updated any further
 
 ## TODO
  - Logging events
- - Translation of messages using Google Genai
+ - Translation of messages using Ollama HTTP requests
 
 ## Features
 
@@ -29,7 +29,7 @@ the OG bombocord should be considered legacy and will not be updated any further
 ### Prerequisites
 - Python 3.8+
 - Discord Bot Token ([Create one here](https://discord.com/developers/applications))
-- Google Generative AI API Key (optional, for AI features) [not yet implemented]
+- Ollama installed and running (optional, for AI features) [not yet implemented]
 
 ### Installation
 
@@ -50,14 +50,14 @@ myvenv\Scripts\activate     # On Windows
 ```bash
 pip install -r requirements.txt
 ```
-*For now I would recommend not installing the google genai library since it's uneseccary*
+*For now I would recommend not installing the Ollama Python library since it's unnecessary - HTTP requests will be used directly*
 
 4. **Set up environment variables**
 
 Create a `.env` file in the project root:
 ```env
 DISCORD_TOKEN=your_discord_bot_token_here
-GOOGLE_API_KEY=your_google_api_key_here #uneeded for now, functionality to be implemented
+OLLAMA_API_URL=http://localhost:11434 #optional, for Ollama AI features (not yet implemented)
 ```
 
 5. **Configure admin users**
@@ -82,7 +82,7 @@ python3 main.py #most modern mac and linux distributions use this by default
 - `COMMAND_PREFIX` - Default prefix for dictionary commands (default: `*`)
 - `JAMAICAN_DICT_FILE` - Path to dictionary JSON file
 - `ADMINS_FILE` - Path to admins JSON file
-- `TRANSLATE` / `TALK` - AI prompt configurations, still not implemented
+- `TRANSLATE` / `TALK` - AI prompt configurations for Ollama HTTP requests, still not implemented
 
 ### Dictionary File (`jamaican_dict.json`)
 JSON format with key-value pairs:
