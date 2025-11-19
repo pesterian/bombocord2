@@ -217,3 +217,4 @@ ENV/
 # Bot data files (keep local only)
 jamaican_dict.json
 admins.json
+bombo.log

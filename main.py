@@ -13,6 +13,16 @@ from func import (
 import time
 from collections import defaultdict
 from functools import wraps
+import logging
+from datetime import datetime
+
+# Configure logging
+logging.basicConfig(
+    filename='bombo.log',
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 
 # Create bot client
 intents = discord.Intents.default()
@@ -66,6 +76,9 @@ def rate_limit(func):
         is_allowed, time_until_reset = rate_limit_check(user_id)
         
         if not is_allowed:
+            # Log rate limit exceeded
+            logging.warning(f"Rate limit exceeded - User: {interaction.user.name} (ID: {user_id})")
+            
             minutes = int(time_until_reset // 60)
             seconds = int(time_until_reset % 60)
             time_str = f"{minutes}m {seconds}s" if minutes > 0 else f"{seconds}s"
@@ -274,6 +287,9 @@ async def roulette(interaction: discord.Interaction):
     
     key, value = entry
     
+    # Log the roulette command
+    logging.info(f"Roulette - User: {interaction.user.name} (ID: {interaction.user.id}) - Key: {key}")
+    
     # Check if the command was used as a reply
     if interaction.message and interaction.message.reference:
         try:
@@ -373,35 +389,34 @@ async def talk(interaction: discord.Interaction, prompt: str):
     """Query the AI assistant with a custom prompt."""
     await interaction.response.defer(thinking=True)
     
+    # Log the talk command
+    logging.info(f"Talk - User: {interaction.user.name} (ID: {interaction.user.id}) - Prompt: {prompt}")
+    
     success, response = query_ollama(prompt, OLLAMA_BASE_URL, OLLAMA_MODEL, TALK)
     
     if success:
-        # Check if the command was used as a reply
-        if interaction.message and interaction.message.reference:
-            try:
-                replied_message = await interaction.channel.fetch_message(interaction.message.reference.message_id)
-                await interaction.followup.send("Done")
-                # Discord has a 2000 character limit for messages
-                if len(response) > 1900:
-                    chunks = [response[i:i+1900] for i in range(0, len(response), 1900)]
-                    await replied_message.reply(chunks[0], mention_author=False)
-                    for chunk in chunks[1:]:
-                        await interaction.channel.send(chunk)
-                else:
-                    await replied_message.reply(response, mention_author=False)
-                return
-            except:
-                pass
+        # Create embed with user input
+        embed = discord.Embed(color=discord.Color.blue())
+        
+        # Add user prompt on same line with colon (collapsed if too long)
+        if len(prompt) > 100:
+            prompt_display = f"Your text: {prompt[:200]}..."
+        else:
+            prompt_display = f"Your text: {prompt}"
+        
+        embed.description = prompt_display
         
         # Discord has a 2000 character limit for messages
         if len(response) > 1900:
-            # Split into chunks if too long
+            # If response is too long, send response in chunks, then embed at end
             chunks = [response[i:i+1900] for i in range(0, len(response), 1900)]
             await interaction.followup.send(chunks[0])
-            for chunk in chunks[1:]:
+            for chunk in chunks[1:-1]:
                 await interaction.channel.send(chunk)
+            await interaction.channel.send(content=chunks[-1], embed=embed)
         else:
-            await interaction.followup.send(response)
+            # Send response with embed below in one message
+            await interaction.followup.send(content=response, embed=embed)
     else:
         await interaction.followup.send(f"Error: {response}", ephemeral=True)
 
@@ -413,36 +428,35 @@ async def translate(interaction: discord.Interaction, text: str):
     """Translate text to Jamaican Patois using AI."""
     await interaction.response.defer(thinking=True)
     
+    # Log the translate command
+    logging.info(f"Translate - User: {interaction.user.name} (ID: {interaction.user.id}) - Text: {text}")
+    
     full_prompt = f"{TRANSLATE}\n\n{text}"
     success, response = query_ollama(full_prompt, OLLAMA_BASE_URL, OLLAMA_MODEL)
     
     if success:
-        # Check if the command was used as a reply
-        if interaction.message and interaction.message.reference:
-            try:
-                replied_message = await interaction.channel.fetch_message(interaction.message.reference.message_id)
-                await interaction.followup.send("Done")
-                # Discord has a 2000 character limit for messages
-                if len(response) > 1900:
-                    chunks = [response[i:i+1900] for i in range(0, len(response), 1900)]
-                    await replied_message.reply(chunks[0], mention_author=False)
-                    for chunk in chunks[1:]:
-                        await interaction.channel.send(chunk)
-                else:
-                    await replied_message.reply(response, mention_author=False)
-                return
-            except:
-                pass
+        # Create embed with user input
+        embed = discord.Embed(color=discord.Color.green())
+        
+        # Add user text on same line with colon (collapsed if too long)
+        if len(text) > 100:
+            text_display = f"Your text: {text[:87]}..."
+        else:
+            text_display = f"Your text: {text}"
+        
+        embed.description = text_display
         
         # Discord has a 2000 character limit for messages
         if len(response) > 1900:
-            # Split into chunks if too long
+            # If response is too long, send response in chunks, then embed at end
             chunks = [response[i:i+1900] for i in range(0, len(response), 1900)]
             await interaction.followup.send(chunks[0])
-            for chunk in chunks[1:]:
+            for chunk in chunks[1:-1]:
                 await interaction.channel.send(chunk)
+            await interaction.channel.send(content=chunks[-1], embed=embed)
         else:
-            await interaction.followup.send(response)
+            # Send response with embed below in one message
+            await interaction.followup.send(content=response, embed=embed)
     else:
         await interaction.followup.send(f"Error: {response}", ephemeral=True)
 
