@@ -23,3 +23,9 @@ TALK = "You are a helpful AI assistant. Respond to the following:"
 # File paths
 JAMAICAN_DICT_FILE = "jamaican_dict.json"
 ADMINS_FILE = "admins.json"
+
+# Rate Limiting Configuration
+RATE_LIMIT_ENABLED = True  # Set to False to disable rate limiting
+RATE_LIMIT_CALLS = 5  # Number of allowed command calls
+RATE_LIMIT_PERIOD = 60  # Time period in seconds (60 = 1 minute)
+RATE_LIMIT_MESSAGE = "Slow down, boss! Yuh using too much command. Wait a likkle bit, seen!"

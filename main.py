@@ -2,13 +2,17 @@ import discord
 from discord import app_commands
 from config import (
     DISCORD_TOKEN, COMMAND_PREFIX, JAMAICAN_DICT_FILE, ADMINS_FILE,
-    OLLAMA_BASE_URL, OLLAMA_MODEL, TRANSLATE, TALK
+    OLLAMA_BASE_URL, OLLAMA_MODEL, TRANSLATE, TALK,
+    RATE_LIMIT_ENABLED, RATE_LIMIT_CALLS, RATE_LIMIT_PERIOD, RATE_LIMIT_MESSAGE
 )
 from func import (
     get_dict_entry, get_all_keys, add_dict_entry, 
     remove_dict_entry, update_dict_entry, is_admin, get_random_entry,
     query_ollama
 )
+import time
+from collections import defaultdict
+from functools import wraps
 
 # Create bot client
 intents = discord.Intents.default()
@@ -18,6 +22,63 @@ tree = app_commands.CommandTree(client)
 
 # Store pending confirmations: {user_id: {'action': 'remove/update', 'key': str, 'value': str}}
 pending_confirmations = {}
+
+# Rate limiting: {user_id: [timestamps]}
+user_command_timestamps = defaultdict(list)
+
+
+def rate_limit_check(user_id: int) -> tuple[bool, float]:
+    """
+    Check if a user has exceeded the rate limit.
+    Returns (is_allowed, time_until_reset)
+    """
+    if not RATE_LIMIT_ENABLED:
+        return True, 0.0
+    
+    current_time = time.time()
+    timestamps = user_command_timestamps[user_id]
+    
+    # Remove timestamps older than the rate limit period
+    user_command_timestamps[user_id] = [
+        ts for ts in timestamps if current_time - ts < RATE_LIMIT_PERIOD
+    ]
+    
+    # Check if user has exceeded the limit
+    if len(user_command_timestamps[user_id]) >= RATE_LIMIT_CALLS:
+        oldest_timestamp = user_command_timestamps[user_id][0]
+        time_until_reset = RATE_LIMIT_PERIOD - (current_time - oldest_timestamp)
+        return False, time_until_reset
+    
+    return True, 0.0
+
+
+def record_command_use(user_id: int):
+    """Record a command usage timestamp for a user."""
+    if RATE_LIMIT_ENABLED:
+        user_command_timestamps[user_id].append(time.time())
+
+
+def rate_limit(func):
+    """Decorator to apply rate limiting to slash commands."""
+    @wraps(func)
+    async def wrapper(interaction: discord.Interaction, *args, **kwargs):
+        user_id = interaction.user.id
+        is_allowed, time_until_reset = rate_limit_check(user_id)
+        
+        if not is_allowed:
+            minutes = int(time_until_reset // 60)
+            seconds = int(time_until_reset % 60)
+            time_str = f"{minutes}m {seconds}s" if minutes > 0 else f"{seconds}s"
+            await interaction.response.send_message(
+                f"{RATE_LIMIT_MESSAGE}\nTry again in: {time_str}",
+                ephemeral=True
+            )
+            return
+        
+        record_command_use(user_id)
+        return await func(interaction, *args, **kwargs)
+    
+    return wrapper
 
 
 @client.event
@@ -39,10 +100,25 @@ async def on_message(message):
         if not key:
             return
         
+        # Check rate limit for prefix commands
+        user_id = message.author.id
+        is_allowed, time_until_reset = rate_limit_check(user_id)
+        
+        if not is_allowed:
+            minutes = int(time_until_reset // 60)
+            seconds = int(time_until_reset % 60)
+            time_str = f"{minutes}m {seconds}s" if minutes > 0 else f"{seconds}s"
+            await message.channel.send(
+                f"{RATE_LIMIT_MESSAGE}\nTry again in: {time_str}",
+                delete_after=10
+            )
+            return
+        
         # Get the value from dictionary
         value = get_dict_entry(key, JAMAICAN_DICT_FILE)
         
         if value:
+            record_command_use(user_id)
             # Check if the user's message is a reply
             if message.reference and message.reference.message_id:
                 # Reply to the same message the user replied to
@@ -81,6 +157,7 @@ async def on_message(message):
 
 
 @tree.command(name="list", description="List all available dictionary keys")
+@rate_limit
 async def list_keys(interaction: discord.Interaction):
     """List all keys in alphabetical order."""
     keys = get_all_keys(JAMAICAN_DICT_FILE)
@@ -112,6 +189,7 @@ async def list_keys(interaction: discord.Interaction):
 
 @tree.command(name="add", description="[ADMIN] Add a new dictionary entry")
 @app_commands.describe(key="The key to add", value="The value/text for this key")
+@rate_limit
 async def add_entry(interaction: discord.Interaction, key: str, value: str):
     """Add a new entry to the dictionary (admin only)."""
     if not is_admin(interaction.user.id, ADMINS_FILE):
@@ -127,6 +205,7 @@ async def add_entry(interaction: discord.Interaction, key: str, value: str):
 
 @tree.command(name="remove", description="[ADMIN] Remove a dictionary entry")
 @app_commands.describe(key="The key to remove")
+@rate_limit
 async def remove_entry(interaction: discord.Interaction, key: str):
     """Remove an entry from the dictionary (admin only)."""
     if not is_admin(interaction.user.id, ADMINS_FILE):
@@ -155,6 +234,7 @@ async def remove_entry(interaction: discord.Interaction, key: str):
 
 @tree.command(name="update", description="[ADMIN] Update a dictionary entry")
 @app_commands.describe(key="The key to update", new_value="The new value/text")
+@rate_limit
 async def update_entry(interaction: discord.Interaction, key: str, new_value: str):
     """Update an existing entry in the dictionary (admin only)."""
     if not is_admin(interaction.user.id, ADMINS_FILE):
@@ -183,6 +263,7 @@ async def update_entry(interaction: discord.Interaction, key: str, new_value: st
 
 
 @tree.command(name="roulette", description="Get a random dictionary entry")
+@rate_limit
 async def roulette(interaction: discord.Interaction):
     """Get a random key-value pair from the dictionary."""
     entry = get_random_entry(JAMAICAN_DICT_FILE)
@@ -196,6 +277,7 @@ async def roulette(interaction: discord.Interaction):
 
 
 @tree.command(name="help", description="Show all available commands")
+@rate_limit
 async def help_command(interaction: discord.Interaction):
     """Display help information about all commands."""
     is_user_admin = is_admin(interaction.user.id, ADMINS_FILE)
@@ -275,6 +357,7 @@ async def help_command(interaction: discord.Interaction):
 
 @tree.command(name="talk", description="Talk to the AI assistant")
 @app_commands.describe(prompt="Your message or question for the AI")
+@rate_limit
 async def talk(interaction: discord.Interaction, prompt: str):
     """Query the AI assistant with a custom prompt."""
     await interaction.response.defer(thinking=True)
@@ -297,6 +380,7 @@ async def talk(interaction: discord.Interaction, prompt: str):
 
 @tree.command(name="translate", description="Translate text to Jamaican Patois using AI")
 @app_commands.describe(text="The text you want to translate to Jamaican Patois")
+@rate_limit
 async def translate(interaction: discord.Interaction, text: str):
     """Translate text to Jamaican Patois using AI."""
     await interaction.response.defer(thinking=True)
