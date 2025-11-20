@@ -382,7 +382,7 @@ async def help_command(interaction: discord.Interaction):
     await interaction.response.send_message(embed=embed)
 
 
-@tree.command(name="talk", description="Talk to the AI assistant")
+@tree.command(name="talk", description="Talk to the AI")
 @app_commands.describe(prompt="Your message or question for the AI")
 @rate_limit
 async def talk(interaction: discord.Interaction, prompt: str):
