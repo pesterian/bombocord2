@@ -33,5 +33,7 @@ Edit `config.py` to customize:
 - **AI Prompts**: Modify `TALK` and `TRANSLATE` system prompts
 
 ## Features exclusive to the ai branch
-- Rate limiting per user
+- /talk and /translate commands which use the local llm to generate humorous messages 
+- Rate limiting per user to avoid overloading the host machine
 - Logging to `bombo.log`
+
